@@ -1,0 +1,105 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/5/CPU.hdl
+/**
+ * The Hack Central Processing unit (CPU).
+ * Parses the binary code in the instruction input and executes it according to the
+ * Hack machine language specification. In the case of a C-instruction, computes the
+ * function specified by the instruction. If the instruction specifies to read a memory
+ * value, the inM input is expected to contain this value. If the instruction specifies
+ * to write a value to the memory, sets the outM output to this value, sets the addressM
+ * output to the target address, and asserts the writeM output (when writeM = 0, any
+ * value may appear in outM).
+ * If the reset input is 0, computes the address of the next instruction and sets the
+ * pc output to that value. If the reset input is 1, sets pc to 0.
+ * Note: The outM and writeM outputs are combinational: they are affected by the
+ * instruction's execution during the current cycle. The addressM and pc outputs are
+ * clocked: although they are affected by the instruction's execution, they commit to
+ * their new values only in the next cycle.
+ */
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Data setup
+    Not(in=instruction[15], out=isAInstruction);
+    Not(in=isAInstruction, out=isCInstruction);
+
+    And(a=isCInstruction, b=instruction[5], out=saveToA);
+    And(a=isCInstruction, b=instruction[4], out=saveToD);
+    And(a=isCInstruction, b=instruction[3], out=saveToM);
+
+	// If an A instruction, select the instruction value
+    // Otherwise select the ALU computation
+
+    Mux16(a=instruction, b=ALUout, sel=isCInstruction, out=ARegIn);
+
+    // The A register. We save the value if the instruction
+    // was an A instruction. Otherwise it emits the existing value
+    // Load A if it's an A instruction (0xx) or the dest
+    // bit 3 is enabled
+
+    Or(a=isAInstruction, b=saveToA, out=loadA);
+    ARegister(in=ARegIn, load=loadA, out=Aout, out[0..14]=addressM);
+
+    // Either A or M. If instruction a is enabled then we use
+    // the input of the selected memory register provided to the
+    // CPU. Otherwise it is the output of the A register. For an
+    // an A instruction it's random based on the value and doesn't
+    // matter because we're only persisting to the A register and
+    // don't care about the calc result.
+    Mux16(a=Aout, b=inM, sel=instruction[12], out=AorM);
+
+    // The D register
+    // Load D if it's a C instruction and the dest 4 bit is enabled
+    And(a=isCInstruction, b=instruction[4], out=loadD);
+    DRegister(in=ALUout, load=loadD, out=Dout);
+
+    // Calculate on D and either A or M
+    ALU(x=Dout, y=AorM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=ALUout, out=outM, zr=zr, ng=ng);
+
+    // Check if any jump needs to occur
+    // If so, load that into PC
+    // Otherwise increment
+    Or(a=zr, b=ng, out=le);
+    Not(in=le, out=gt);
+
+    And(a=instruction[0], b=gt, out=jgt);
+    And(a=instruction[1], b=zr, out=jeq);
+    And(a=instruction[2], b=ng, out=jlt);
+    Or(a=jgt, b=jeq, out=jge);
+    Or(a=jge, b=jlt, out=jmp);
+    And(a=jmp, b=instruction[15], out=doJmp);
+    Not(in=doJmp, out=inc);
+    
+    PC(in=Aout, load=doJmp, inc=inc, reset=reset, out[0..14]=pc);
+
+    // Additional controls
+
+    // Write to memory if command with load M
+    And(a=isCInstruction, b=instruction[3], out=writeM);
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
