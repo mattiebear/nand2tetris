@@ -1,0 +1,46 @@
+mod code;
+mod parser;
+
+use parser::{InstructionType, Parser};
+use std::fs::File;
+
+fn main() {
+    // Get the argv from the command line
+    let args: Vec<String> = std::env::args().collect();
+
+    // Check if the user has provided a file name
+    if args.len() < 2 {
+        println!("Usage: {} <file>", args[0]);
+        std::process::exit(1);
+    }
+
+    let file = File::open(&args[1]).unwrap();
+    let mut parser = Parser::new(&file);
+    let mut instructions: Vec<String> = vec![];
+
+    while parser.has_more_lines() {
+        parser.advance();
+
+        match parser.instruction_type() {
+            InstructionType::C => {
+                let instruction = String::from("111");
+                let dest = code::dest(&parser.dest());
+                let comp = code::comp(&parser.comp());
+                let jump = code::jump(&parser.jump());
+
+                instructions.push(instruction + &dest + &comp + &jump);
+            }
+            _ => {
+                let symbol = parser.symbol();
+                let symbol_val: u32 = symbol.parse().unwrap();
+                let bit_symbol = format!("{:016b}", symbol_val);
+
+                instructions.push(bit_symbol);
+            }
+        }
+    }
+
+    for instruction in instructions {
+        println!("{}", instruction);
+    }
+}
