@@ -3,6 +3,7 @@ mod parser;
 
 use parser::{InstructionType, Parser};
 use std::fs::File;
+use std::io::Write;
 
 fn main() {
     // Get the argv from the command line
@@ -28,7 +29,7 @@ fn main() {
                 let comp = code::comp(&parser.comp());
                 let jump = code::jump(&parser.jump());
 
-                instructions.push(instruction + &dest + &comp + &jump);
+                instructions.push(instruction + &comp + &dest + &jump);
             }
             _ => {
                 let symbol = parser.symbol();
@@ -40,7 +41,11 @@ fn main() {
         }
     }
 
+    let bin_file_name = &args[1].replace("asm", "hack");
+    let mut bin_file = File::create(bin_file_name).unwrap();
+
     for instruction in instructions {
-        println!("{}", instruction);
+        bin_file.write_all(instruction.as_bytes()).unwrap();
+        bin_file.write_all(b"\n").unwrap();
     }
 }
