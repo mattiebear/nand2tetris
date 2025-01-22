@@ -1,9 +1,11 @@
 mod code;
 mod parser;
+mod symbol_lookup;
 
 use parser::{InstructionType, Parser};
 use std::fs::File;
 use std::io::Write;
+use symbol_lookup::SymbolLookup;
 
 fn main() {
     // Get the argv from the command line
@@ -17,6 +19,23 @@ fn main() {
 
     let file = File::open(&args[1]).unwrap();
     let mut parser = Parser::new(&file);
+
+    let mut symbol_lookup = SymbolLookup::new();
+
+    // First pass, get all of the labels
+    while parser.has_more_lines() {
+        parser.advance();
+
+        match parser.instruction_type() {
+            InstructionType::L => {
+                symbol_lookup.set_line(parser.symbol(), parser.register_number as u16 + 1);
+            }
+            _ => (),
+        }
+    }
+
+    parser.reset();
+
     let mut instructions: Vec<String> = vec![];
 
     while parser.has_more_lines() {
@@ -31,13 +50,24 @@ fn main() {
 
                 instructions.push(instruction + &comp + &dest + &jump);
             }
-            _ => {
+            InstructionType::A => {
                 let symbol = parser.symbol();
-                let symbol_val: u32 = symbol.parse().unwrap();
-                let bit_symbol = format!("{:016b}", symbol_val);
 
-                instructions.push(bit_symbol);
+                if symbol.chars().all(char::is_numeric) {
+                    let bit_symbol = format!("{:016b}", symbol.parse::<u16>().unwrap());
+                    instructions.push(bit_symbol);
+                    continue;
+                } else {
+                    if !symbol_lookup.contains(&symbol) {
+                        symbol_lookup.add_variable(symbol.clone());
+                    }
+
+                    let address = symbol_lookup.get(&symbol).unwrap();
+                    let bit_address = format!("{:016b}", address);
+                    instructions.push(bit_address);
+                }
             }
+            InstructionType::L => (),
         }
     }
 

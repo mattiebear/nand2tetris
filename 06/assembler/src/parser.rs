@@ -3,20 +3,22 @@ use std::io::{BufRead, BufReader};
 
 pub struct Parser {
     lines: Vec<String>,
-    read_line: i32,
+    pub read_line: i32,
+    pub register_number: i32,
 }
 
 impl Parser {
     pub fn new(file: &File) -> Self {
         let lines = BufReader::new(file)
             .lines()
-            .map(|l| l.unwrap())
+            .map(|l| l.unwrap().trim().to_string())
             .filter(|l| !l.starts_with("//") && l.len() > 0)
             .collect();
 
         Self {
             lines,
             read_line: -1,
+            register_number: -1,
         }
     }
 
@@ -31,6 +33,11 @@ impl Parser {
 
     pub fn advance(&mut self) {
         self.read_line += 1;
+
+        match self.instruction_type() {
+            InstructionType::L => (),
+            _ => self.register_number += 1,
+        }
     }
 
     pub fn instruction_type(&self) -> InstructionType {
@@ -55,6 +62,11 @@ impl Parser {
 
     pub fn dest(&self) -> String {
         let line = self.current_line();
+
+        if !line.contains("=") {
+            return "".to_string();
+        }
+
         let targ = line.split("=").next().unwrap();
 
         targ.to_string()
@@ -79,6 +91,11 @@ impl Parser {
         let targ = targ.split(";").last().unwrap();
 
         targ.to_string()
+    }
+
+    pub fn reset(&mut self) {
+        self.read_line = -1;
+        self.register_number = -1;
     }
 }
 
