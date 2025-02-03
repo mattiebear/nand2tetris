@@ -31,7 +31,7 @@ pub enum Command {
     Stack {
         op: StackOp,
         segment: StackSegment,
-        index: u16,
+        value_or_index: u16,
     },
 }
 
@@ -52,7 +52,7 @@ impl Parser {
     }
 
     pub fn has_more_lines(self: &Self) -> bool {
-        self.pos < self.total_lines() - 1
+        self.pos < self.total_lines()
     }
 
     pub fn advance(self: &mut Self) {
@@ -88,9 +88,13 @@ impl Parser {
                 _ => panic!("Invalid stack segment"),
             };
 
-            let index = segments[2].parse::<u16>().unwrap();
+            let value_or_index = segments[2].parse::<u16>().unwrap();
 
-            Command::Stack { op, segment, index }
+            Command::Stack {
+                op,
+                segment,
+                value_or_index,
+            }
         }
     }
 
