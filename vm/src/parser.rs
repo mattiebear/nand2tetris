@@ -5,6 +5,13 @@ use std::io::{BufRead, BufReader};
 pub enum MathOp {
     Add,
     Sub,
+    Neg,
+    Eq,
+    Gt,
+    Lt,
+    And,
+    Or,
+    Not,
 }
 
 #[derive(Debug)]
