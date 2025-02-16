@@ -116,6 +116,7 @@ pub fn to_asm(command: &Command) -> Vec<String> {
                 "A=M-1".to_string(),
                 "M=-M".to_string(),
             ],
+            MathOp::Eq => vec![], // TODO
             _ => panic!("Invalid arithmetic operation"),
         },
         _ => panic!("Invalid command"),
@@ -130,5 +131,3 @@ pub fn end_loop() -> Vec<String> {
         "0;JMP".to_string(),
     ]
 }
-
-fn push_value(value: u16) -> Vec<String> {}
