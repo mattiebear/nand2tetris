@@ -72,6 +72,13 @@ impl Parser {
             let op = match segments[0] {
                 "add" => MathOp::Add,
                 "sub" => MathOp::Sub,
+                "neg" => MathOp::Neg,
+                "eq" => MathOp::Eq,
+                "gt" => MathOp::Gt,
+                "lt" => MathOp::Lt,
+                "and" => MathOp::And,
+                "or" => MathOp::Or,
+                "not" => MathOp::Not,
                 _ => panic!("Invalid arithmetic operation"),
             };
 
