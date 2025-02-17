@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-#[derive(Debug)]
 pub enum MathOp {
     Add,
     Sub,
@@ -30,7 +29,6 @@ pub enum StackSegment {
     Temp,
 }
 
-#[derive(Debug)]
 pub enum Command {
     Arithmetic {
         op: MathOp,

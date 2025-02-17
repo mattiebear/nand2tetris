@@ -2,6 +2,7 @@ use crate::parser::MathOp;
 
 use super::parser::{Command, StackOp, StackSegment};
 
+// TODO: Work with both Strings and &str
 pub fn to_asm(command: &Command) -> Vec<String> {
     match command {
         Command::Stack {
@@ -91,7 +92,6 @@ pub fn to_asm(command: &Command) -> Vec<String> {
                     ]
                 }
             },
-            _ => panic!("Invalid stack operation"),
         },
         Command::Arithmetic { op } => match op {
             MathOp::Add => vec![
@@ -116,10 +116,89 @@ pub fn to_asm(command: &Command) -> Vec<String> {
                 "A=M-1".to_string(),
                 "M=-M".to_string(),
             ],
-            MathOp::Eq => vec![], // TODO
-            _ => panic!("Invalid arithmetic operation"),
+            MathOp::Eq => vec![
+                "// eq".to_string(),
+                "@SP".to_string(),
+                "AM=M-1".to_string(),
+                "D=M".to_string(),
+                "A=A-1".to_string(),
+                "D=M-D".to_string(),
+                "@EQ_TRUE".to_string(),
+                "D;JEQ".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=0".to_string(),
+                "@EQ_END".to_string(),
+                "0;JMP".to_string(),
+                "(EQ_TRUE)".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=-1".to_string(),
+                "(EQ_END)".to_string(),
+            ],
+            MathOp::Gt => vec![
+                "// gt".to_string(),
+                "@SP".to_string(),
+                "AM=M-1".to_string(),
+                "D=M".to_string(),
+                "A=A-1".to_string(),
+                "D=M-D".to_string(),
+                "@GT_TRUE".to_string(),
+                "D;JGT".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=0".to_string(),
+                "@GT_END".to_string(),
+                "0;JMP".to_string(),
+                "(GT_TRUE)".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=-1".to_string(),
+                "(GT_END)".to_string(),
+            ],
+            MathOp::Lt => vec![
+                "// lt".to_string(),
+                "@SP".to_string(),
+                "AM=M-1".to_string(),
+                "D=M".to_string(),
+                "A=A-1".to_string(),
+                "D=M-D".to_string(),
+                "@LT_TRUE".to_string(),
+                "D;JLT".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=0".to_string(),
+                "@LT_END".to_string(),
+                "0;JMP".to_string(),
+                "(LT_TRUE)".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=-1".to_string(),
+                "(LT_END)".to_string(),
+            ],
+            MathOp::And => vec![
+                "// and".to_string(),
+                "@SP".to_string(),
+                "AM=M-1".to_string(),
+                "D=M".to_string(),
+                "A=A-1".to_string(),
+                "M=D&M".to_string(),
+            ],
+            MathOp::Or => vec![
+                "// or".to_string(),
+                "@SP".to_string(),
+                "AM=M-1".to_string(),
+                "D=M".to_string(),
+                "A=A-1".to_string(),
+                "M=D|M".to_string(),
+            ],
+            MathOp::Not => vec![
+                "// not".to_string(),
+                "@SP".to_string(),
+                "A=M-1".to_string(),
+                "M=!M".to_string(),
+            ],
         },
-        _ => panic!("Invalid command"),
     }
 }
 
