@@ -31,6 +31,7 @@ pub enum StackSegment {
 
 pub enum Command {
     Arithmetic {
+        id: u16,
         op: MathOp,
     },
     Stack {
@@ -82,7 +83,7 @@ impl Parser {
                 _ => panic!("Invalid arithmetic operation"),
             };
 
-            Command::Arithmetic { op }
+            Command::Arithmetic { id: self.pos, op }
         } else {
             let op = match segments[0] {
                 "push" => StackOp::Push,
